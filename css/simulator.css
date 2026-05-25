@@ -1,0 +1,621 @@
+/* ==========================================================================
+   FLIGHT SIMULATOR LAYOUT (BRUTALIST HUD)
+   ========================================================================== */
+.simulator-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #000000;
+}
+
+#simulator-canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000000;
+    z-index: 1;
+}
+
+/* ==========================================================================
+   TOP BAR (CONTROL CENTER)
+   ========================================================================== */
+.top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: var(--bg);
+    border-bottom: 2px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 100;
+}
+
+.sim-title {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--text);
+    text-transform: uppercase;
+}
+
+.camera-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.camera-controls label {
+    font-family: var(--font-heading);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--text);
+}
+
+.camera-controls select {
+    width: 160px;
+    padding: 6px 10px;
+    font-size: 11px;
+}
+
+.exit-button {
+    background: var(--accent);
+    color: #FFFFFF;
+    padding: 8px 16px;
+    font-size: 12px;
+    box-shadow: 2px 2px 0px var(--border);
+}
+
+.exit-button:hover {
+    background: var(--accent-hover);
+    box-shadow: 3px 3px 0px var(--border);
+}
+
+/* ==========================================================================
+   TELEMETRY HUD PANEL (RIGHT SIDE)
+   ========================================================================== */
+.telemetry-panel {
+    position: absolute;
+    top: 80px;
+    right: 20px;
+    width: 280px;
+    max-height: calc(100vh - 120px);
+    background: var(--panel-bg);
+    border: 2px solid var(--border);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+}
+
+.telemetry-header {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.telemetry-content {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.telemetry-section {
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 2px dashed rgba(0, 0, 0, 0.1);
+}
+
+.telemetry-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.telemetry-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.telem-label {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.telem-value {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* Armed Status Banner */
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.status-label {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.status-value {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 12px;
+    padding: 6px 12px;
+    border: 2px solid var(--border);
+    text-align: center;
+}
+
+#armed-status {
+    background: #FFEBEE;
+    color: #C62828;
+}
+
+#armed-status.armed {
+    background: #E8F5E9;
+    color: #2E7D32;
+    border-color: #2E7D32;
+}
+
+/* Battery Indicator */
+.battery-bar {
+    width: 100%;
+    height: 16px;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 0px;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.battery-fill {
+    height: 100%;
+    width: 100%;
+    background: var(--accent);
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+.battery-fill.warning {
+    background: #FFC107;
+}
+
+.battery-fill.critical {
+    background: #F44336;
+}
+
+/* Artificial Horizon HUD */
+.artificial-horizon {
+    width: 100%;
+    height: 90px;
+    background: linear-gradient(180deg, #64B5F6 0%, #64B5F6 48%, #111111 49%, #8D6E63 52%, #8D6E63 100%);
+    border: 2px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.horizon-line {
+    position: absolute;
+    top: 50%;
+    left: -50%;
+    right: -50%;
+    height: 3px;
+    background: #FFFFFF;
+    transform: translateY(-50%);
+    transition: transform 0.1s ease;
+}
+
+.horizon-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--accent);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.horizon-center::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 4px;
+    height: 4px;
+    background: var(--accent);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* ==========================================================================
+   RC CONTROLLER JOYSICKS (BOTTOM RIGHT)
+   ========================================================================== */
+.rc-controller {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
+    background: var(--panel-bg);
+    border: 2px solid var(--border);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    z-index: 50;
+}
+
+.rc-header {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 6px;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.rc-sticks {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.stick-container {
+    flex: 1;
+}
+
+.stick-label {
+    text-align: center;
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+
+.stick-boundary {
+    width: 120px;
+    height: 120px;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    position: relative;
+    margin: 0 auto;
+    cursor: none;
+}
+
+.stick-crosshair {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    transform: translate(-50%, -50%);
+}
+
+.stick-crosshair::before,
+.stick-crosshair::after {
+    content: '';
+    position: absolute;
+    background: rgba(0, 0, 0, 0.15);
+}
+
+.stick-crosshair::before {
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    transform: translateY(-50%);
+}
+
+.stick-crosshair::after {
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    transform: translateX(-50%);
+}
+
+.stick {
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    border: 2px solid var(--border);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.2);
+    transition: box-shadow 0.1s ease, background 0.15s;
+    z-index: 5;
+}
+
+.stick:hover {
+    background: var(--accent-hover);
+}
+
+.rc-buttons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.rc-btn {
+    flex: 1;
+    padding: 8px 12px;
+    font-size: 11px;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    box-shadow: 2px 2px 0px var(--border);
+}
+
+.rc-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px var(--border);
+}
+
+.rc-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px var(--border);
+}
+
+#arm-button {
+    background: #E8F5E9;
+    color: #2E7D32;
+    border-color: var(--border);
+}
+
+#arm-button:hover {
+    background: #C8E6C9;
+}
+
+#rth-button {
+    background: #E3F2FD;
+    color: #1565C0;
+}
+
+#rth-button:hover {
+    background: #BBDEFB;
+}
+
+#emergency-button {
+    background: #FFEBEE;
+    color: #C62828;
+}
+
+#emergency-button:hover {
+    background: #FFCDD2;
+}
+
+.keyboard-hint {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: var(--muted);
+    padding: 6px;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    text-transform: uppercase;
+}
+
+/* ==========================================================================
+   FLIGHT CHARTS GRAPH (BOTTOM LEFT)
+   ========================================================================== */
+.graphs-panel {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    width: 540px;
+    height: 240px;
+    background: var(--panel-bg);
+    border: 2px solid var(--border);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+}
+
+.graphs-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+}
+
+.graph-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.graph-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+    box-shadow: 1px 1px 0px var(--border);
+}
+
+.graph-btn:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 2px 2px 0px var(--border);
+}
+
+#flight-graph {
+    width: 100%;
+    flex: 1;
+    background: var(--bg);
+    border: 2px solid var(--border);
+}
+
+/* ==========================================================================
+   RESPONSIVE HUD ELEMENTS MEDIA QUERIES
+   ========================================================================== */
+@media (max-width: 1200px) {
+    .graphs-panel {
+        width: 420px;
+        height: 200px;
+    }
+    
+    .rc-controller {
+        width: 290px;
+    }
+    
+    .stick-boundary {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+@media (max-width: 900px) {
+    .top-bar {
+        height: auto;
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+    }
+    
+    .telemetry-panel {
+        top: 140px;
+        right: 10px;
+        width: 220px;
+        padding: 10px;
+    }
+    
+    .rc-controller {
+        bottom: 10px;
+        right: 10px;
+        width: 260px;
+        padding: 10px;
+    }
+    
+    .stick-boundary {
+        width: 90px;
+        height: 90px;
+    }
+    
+    .graphs-panel {
+        display: none; /* Hide graphs on smaller tablet view to avoid overlaps */
+    }
+}
+
+@media (max-width: 600px) {
+    .telemetry-panel {
+        position: static;
+        width: 100%;
+        margin-top: 140px;
+        height: auto;
+        z-index: 10;
+    }
+    
+    .rc-controller {
+        position: static;
+        width: 100%;
+        margin-top: 10px;
+        margin-bottom: 20px;
+        height: auto;
+        z-index: 10;
+    }
+    
+    .simulator-container {
+        height: auto;
+        overflow-y: auto;
+    }
+    
+    #simulator-canvas-container {
+        height: 400px;
+        position: relative;
+    }
+}
+
+/* ==========================================================================
+   ADDITIONAL HUD WIDGETS
+   ========================================================================== */
+.visualizer-panel {
+    position: absolute;
+    top: 80px;
+    left: 20px;
+    width: 260px;
+    background: var(--panel-bg);
+    border: 2px solid var(--border);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    z-index: 50;
+}
+
+.equations-panel {
+    position: absolute;
+    bottom: 280px;
+    left: 20px;
+    width: 265px;
+    background: var(--panel-bg);
+    border: 2px solid var(--border);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    z-index: 50;
+}
+
+#loiter-button {
+    background: #FFF3E0;
+    color: #E65100;
+}
+
+#loiter-button:hover {
+    background: #FFE0B2;
+}
+
+/* Active states for flight mode buttons */
+#loiter-button.active,
+#rth-button.active {
+    background: var(--accent) !important;
+    color: #FFFFFF !important;
+    box-shadow: none !important;
+    transform: translate(2px, 2px) !important;
+}
+
+@media (max-width: 900px) {
+    .visualizer-panel,
+    .equations-panel {
+        display: none !important; /* Hide visualizer and equations panels on small screens */
+    }
+}
+

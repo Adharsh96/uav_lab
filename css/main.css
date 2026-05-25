@@ -1,0 +1,439 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ==========================================================================
+   BRUTALIST THEME - MAIN VARIABLES & BASE
+   ========================================================================== */
+:root {
+    --bg: #F2EDE8;
+    --text: #111111;
+    --accent: #FF3D00;
+    --accent-hover: #E03600;
+    --accent-light: rgba(255, 61, 0, 0.08);
+    --border: #111111;
+    --panel-bg: #FFFFFF;
+    --muted: #555555;
+    --shadow: 4px 4px 0px #111111;
+    --shadow-hover: 2px 2px 0px #111111;
+    --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'Space Mono', monospace;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+    background-color: var(--bg);
+    cursor: none; /* Hide default cursor to use retro custom cursor */
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    cursor: none; /* Custom cursor */
+}
+
+a, button, select, input, .category-header, .terrain-option {
+    cursor: none; /* Override standard hover cursor */
+}
+
+::selection {
+    background: var(--accent);
+    color: var(--bg);
+}
+
+.section {
+    display: none;
+    width: 100%;
+    height: 100vh;
+}
+
+.section.active {
+    display: block;
+}
+
+/* ==========================================================================
+   CUSTOM CURSOR SYSTEM
+   ========================================================================== */
+.cursor-dot {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    background: var(--text);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, background 0.2s;
+}
+
+.cursor-ring {
+    position: fixed;
+    width: 36px;
+    height: 36px;
+    border: 2px solid rgba(17, 17, 17, 0.4);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 99998;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+}
+
+/* Hovering and clicking states */
+.cursor-dot.hovering {
+    width: 12px;
+    height: 12px;
+    background: var(--accent);
+}
+
+.cursor-ring.hovering {
+    width: 48px;
+    height: 48px;
+    border-color: var(--accent);
+    background: rgba(255, 61, 0, 0.05);
+}
+
+.cursor-dot.clicking {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+}
+
+.cursor-ring.clicking {
+    width: 28px;
+    height: 28px;
+    border-color: var(--accent);
+}
+
+/* ==========================================================================
+   RETRO GRAIN OVERLAY
+   ========================================================================== */
+.grain-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.06;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+    mix-blend-mode: multiply;
+}
+
+.grain-overlay::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: repeating-conic-gradient(rgba(0, 0, 0, 0.015) 0% 25%, transparent 0% 50%) 50% / 4px 4px;
+    animation: grain 1s steps(8) infinite;
+}
+
+@keyframes grain {
+    0%, 100% { transform: translate(0, 0); }
+    10% { transform: translate(-2%, -5%); }
+    20% { transform: translate(-5%, 2%); }
+    30% { transform: translate(3%, -10%); }
+    40% { transform: translate(-2%, 10%); }
+    50% { transform: translate(-6%, 4%); }
+    60% { transform: translate(5%, 0%); }
+    70% { transform: translate(0%, 5%); }
+    80% { transform: translate(1%, 12%); }
+    90% { transform: translate(-4%, 4%); }
+}
+
+/* ==========================================================================
+   LOADING SCREEN
+   ========================================================================== */
+#loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    transition: opacity 0.5s ease;
+    border: 10px solid var(--border);
+}
+
+#loading-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-content {
+    text-align: center;
+    background: var(--panel-bg);
+    padding: 40px;
+    border: 3px solid var(--border);
+    box-shadow: var(--shadow);
+}
+
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid #e0e0e0;
+    border-top: 6px solid var(--accent);
+    border-radius: 0%; /* Brutalist sharp edges */
+    animation: spin 1s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+    margin: 0 auto 25px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 24px;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* ==========================================================================
+   BRUTALIST PANEL CARD COMPONENT
+   ========================================================================== */
+.panel {
+    background: var(--panel-bg);
+    border: 2px solid var(--border);
+    border-radius: 0px; /* Sharp corners */
+    padding: 20px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.panel-header {
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.panel-header h2 {
+    font-family: var(--font-heading);
+    font-size: 1.4rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text);
+    position: relative;
+}
+
+.panel-header h2::after {
+    content: '';
+    position: absolute;
+    bottom: -14px;
+    left: 0;
+    width: 40px;
+    height: 4px;
+    background: var(--accent);
+}
+
+/* ==========================================================================
+   SCROLLBARS
+   ========================================================================== */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg);
+    border-left: 2px solid var(--border);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border: 2px solid var(--bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+}
+
+/* ==========================================================================
+   FORM CONTROLS (BRUTALIST STYLING)
+   ========================================================================== */
+select {
+    width: 100%;
+    padding: 10px;
+    background: var(--panel-bg);
+    border: 2px solid var(--border);
+    border-radius: 0px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg fill='black' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 20px;
+    transition: all 0.15s ease;
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 2px 2px 0px var(--border);
+}
+
+select option {
+    background: var(--panel-bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+}
+
+/* Ranges */
+input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    padding: 8px 0;
+}
+
+input[type="range"]:focus {
+    outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 8px;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 0px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    height: 20px;
+    width: 20px;
+    background: var(--accent);
+    border: 2px solid var(--border);
+    border-radius: 0px;
+    cursor: none;
+    -webkit-appearance: none;
+    margin-top: -8px;
+    box-shadow: 2px 2px 0px var(--border);
+    transition: transform 0.1s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    background: var(--accent-hover);
+}
+
+input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 8px;
+    background: var(--bg);
+    border: 2px solid var(--border);
+}
+
+input[type="range"]::-moz-range-thumb {
+    height: 18px;
+    width: 18px;
+    background: var(--accent);
+    border: 2px solid var(--border);
+    border-radius: 0px;
+    cursor: none;
+    box-shadow: 2px 2px 0px var(--border);
+}
+
+/* ==========================================================================
+   BUTTONS (BRUTALIST STYLING)
+   ========================================================================== */
+button {
+    font-family: var(--font-heading);
+    text-transform: uppercase;
+    font-weight: 900;
+    letter-spacing: 1px;
+    padding: 12px 24px;
+    background: var(--panel-bg);
+    color: var(--text);
+    border: 2px solid var(--border);
+    border-radius: 0px;
+    transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: var(--shadow);
+}
+
+button:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px var(--border);
+    background: var(--accent-light);
+}
+
+button:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px var(--border);
+}
+
+button:disabled {
+    background: #e0e0e0;
+    color: #888888;
+    border-color: #888888;
+    box-shadow: none;
+    transform: none;
+    cursor: not-allowed;
+}
+
+/* Specific Accent Buttons */
+.accent-button {
+    background: var(--accent);
+    color: #FFFFFF;
+}
+
+.accent-button:hover {
+    background: var(--accent-hover);
+    color: #FFFFFF;
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+.highlight {
+    border: 3px solid var(--accent) !important;
+    background: var(--accent-light) !important;
+}
+
+.mono {
+    font-family: var(--font-mono);
+}
+
+/* Responsive basics */
+@media (max-width: 1280px) {
+    body {
+        font-size: 14px;
+    }
+    
+    .panel-header h2 {
+        font-size: 1.2rem;
+    }
+}

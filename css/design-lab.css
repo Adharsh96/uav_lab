@@ -1,0 +1,463 @@
+/* ==========================================================================
+   DESIGN LAB PANEL LAYOUT (BRUTALIST & RESPONSIVE)
+   ========================================================================== */
+.design-lab-container {
+    display: grid;
+    grid-template-columns: 320px 1fr 360px;
+    grid-template-rows: 60% 40%;
+    gap: 16px;
+    padding: 16px;
+    height: 100vh;
+    width: 100vw;
+    background-color: var(--bg);
+}
+
+/* ==========================================================================
+   PANEL STRUCTURING
+   ========================================================================== */
+
+/* Panel A: 3D Preview (Center) */
+.preview-panel {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+#preview-canvas-container {
+    flex: 1;
+    position: relative;
+    background: radial-gradient(circle, #e6ded7 0%, #d8cfc5 100%);
+    border: 2px solid var(--border);
+    overflow: hidden;
+}
+
+/* Panel B: Components List (Left) */
+.components-panel {
+    grid-column: 1;
+    grid-row: 1 / 3;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.components-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+}
+
+/* Panel C: Environment Options (Right Top) */
+.environment-panel {
+    grid-column: 3;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.environment-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+}
+
+/* Panel D: Specifications Summary (Right Bottom) */
+.summary-panel {
+    grid-column: 3;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.summary-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+}
+
+/* ==========================================================================
+   COMPONENTS SELECTIONS (ACCORDIONS)
+   ========================================================================== */
+.component-category {
+    margin-bottom: 12px;
+    border: 2px solid var(--border);
+    transition: all 0.2s;
+}
+
+.component-category:hover {
+    box-shadow: 2px 2px 0px var(--border);
+}
+
+.category-header {
+    background: var(--bg);
+    padding: 12px 16px;
+    cursor: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 13px;
+    letter-spacing: 1px;
+    border-bottom: 2px solid var(--border);
+    transition: all 0.15s;
+}
+
+.category-header:hover {
+    background: var(--accent-light);
+    color: var(--accent);
+}
+
+.category-header.collapsed {
+    border-bottom-color: transparent;
+}
+
+.toggle-icon {
+    font-size: 10px;
+    transition: transform 0.2s ease;
+}
+
+.category-header.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.category-content {
+    padding: 16px;
+    background: var(--panel-bg);
+    max-height: 1000px;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0, 1, 0, 1), padding 0.3s ease;
+}
+
+.category-content.collapsed {
+    max-height: 0;
+    padding: 0 16px;
+    border-top: none;
+}
+
+.option-group {
+    margin-bottom: 14px;
+}
+
+.option-group:last-child {
+    margin-bottom: 0;
+}
+
+.option-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text);
+}
+
+/* ==========================================================================
+   ENVIRONMENT SETTINGS
+   ========================================================================== */
+.env-section {
+    margin-bottom: 20px;
+}
+
+.env-section:last-child {
+    margin-bottom: 0;
+}
+
+.env-section h3 {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text);
+    margin-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 6px;
+}
+
+.wind-indicator {
+    text-align: center;
+    padding: 8px;
+    background: var(--bg);
+    border: 2px solid var(--border);
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+/* Terrain Options Grid */
+.terrain-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.terrain-option {
+    background: var(--panel-bg);
+    border: 2px solid var(--border);
+    padding: 12px;
+    text-align: center;
+    cursor: none;
+    transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 2px 2px 0px var(--border);
+}
+
+.terrain-option:hover {
+    background: var(--accent-light);
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0px var(--border);
+}
+
+.terrain-option.selected {
+    background: var(--accent);
+    color: #FFFFFF;
+    box-shadow: none;
+    transform: translate(2px, 2px);
+}
+
+.terrain-option.selected:hover {
+    background: var(--accent-hover);
+    color: #FFFFFF;
+}
+
+.terrain-preview {
+    font-size: 32px;
+    margin-bottom: 4px;
+}
+
+.terrain-name {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ==========================================================================
+   SPECIFICATIONS SUMMARY & OPTIMIZER
+   ========================================================================== */
+.specs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.spec-item {
+    background: var(--bg);
+    padding: 10px;
+    border: 2px solid var(--border);
+    transition: all 0.15s;
+}
+
+.spec-item:hover {
+    box-shadow: 2px 2px 0px var(--border);
+}
+
+.spec-label {
+    font-family: var(--font-heading);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+
+.spec-value {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.spec-item.highlight .spec-value {
+    color: var(--accent);
+}
+
+/* Recommendations */
+.design-tips {
+    background: #FFF9E6;
+    border: 2px solid var(--border);
+    padding: 12px;
+    margin-bottom: 12px;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.tip {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.15);
+    padding-bottom: 6px;
+}
+
+.tip:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+/* Optimizer Control Panel */
+.optimize-panel {
+    border: 2px dashed var(--border);
+    padding: 12px;
+    margin-bottom: 12px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.optimize-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.optimize-title {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text);
+}
+
+.optimize-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.optimize-controls select {
+    padding: 6px 10px;
+    font-size: 11px;
+    flex: 1;
+}
+
+.optimize-btn {
+    padding: 6px 12px;
+    font-size: 11px;
+    background: var(--accent);
+    color: #FFFFFF;
+    border-radius: 0px;
+    box-shadow: 2px 2px 0px var(--border);
+}
+
+.optimize-btn:hover {
+    background: var(--accent-hover);
+    box-shadow: 3px 3px 0px var(--border);
+}
+
+/* Launch Button */
+.launch-button {
+    width: 100%;
+    padding: 16px;
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+    background: var(--accent);
+    color: #FFFFFF;
+    border: 2px solid var(--border);
+    box-shadow: var(--shadow);
+    text-transform: uppercase;
+    margin-top: auto;
+}
+
+.launch-button:hover {
+    background: var(--accent-hover);
+    transform: translate(-3px, -3px);
+    box-shadow: 7px 7px 0px var(--border);
+}
+
+.launch-button:active {
+    transform: translate(1px, 1px);
+    box-shadow: 3px 3px 0px var(--border);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN LAB MEDIA QUERIES
+   ========================================================================== */
+@media (max-width: 1200px) {
+    .design-lab-container {
+        grid-template-columns: 280px 1fr;
+        grid-template-rows: 55% 45%;
+    }
+    
+    .preview-panel {
+        grid-column: 2;
+        grid-row: 1;
+    }
+    
+    .components-panel {
+        grid-column: 1;
+        grid-row: 1 / 3;
+    }
+    
+    .environment-panel {
+        grid-column: 2;
+        grid-row: 2;
+        height: auto;
+    }
+    
+    .summary-panel {
+        grid-column: 2;
+        grid-row: 2;
+        display: none; /* Hide summary or merge it on medium screens */
+    }
+}
+
+@media (max-width: 900px) {
+    .design-lab-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 400px auto auto auto;
+        height: auto;
+        overflow-y: auto;
+    }
+    
+    .preview-panel {
+        grid-column: 1;
+        grid-row: 1;
+        height: 400px;
+    }
+    
+    .components-panel {
+        grid-column: 1;
+        grid-row: 2;
+        height: 500px;
+    }
+    
+    .environment-panel {
+        grid-column: 1;
+        grid-row: 3;
+        height: auto;
+    }
+    
+    .summary-panel {
+        display: flex;
+        grid-column: 1;
+        grid-row: 4;
+        height: auto;
+    }
+}
