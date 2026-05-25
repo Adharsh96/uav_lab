@@ -369,6 +369,40 @@
     box-shadow: 3px 3px 0px var(--border);
 }
 
+/* Save / Export Row */
+.save-export-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.save-btn {
+    flex: 1;
+    padding: 10px;
+    font-family: var(--font-heading);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: var(--bg);
+    color: var(--text);
+    border: 2px solid var(--border);
+    box-shadow: 2px 2px 0px var(--border);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.save-btn:hover {
+    background: var(--accent-light);
+    transform: translate(-2px, -2px);
+    box-shadow: 4px 4px 0px var(--border);
+}
+
+.save-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 1px 1px 0px var(--border);
+}
+
 /* Launch Button */
 .launch-button {
     width: 100%;

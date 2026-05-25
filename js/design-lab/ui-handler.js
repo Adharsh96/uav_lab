@@ -103,6 +103,17 @@ class DesignLabUI {
             this.runAutoOptimizer();
         });
 
+        // Save / Load config
+        document.getElementById('save-config').addEventListener('click', () => {
+            this.saveConfig();
+        });
+        document.getElementById('load-config').addEventListener('click', () => {
+            document.getElementById('load-config-input').click();
+        });
+        document.getElementById('load-config-input').addEventListener('change', (e) => {
+            this.loadConfig(e);
+        });
+
         // Launch button
         document.getElementById('launch-simulator').addEventListener('click', () => {
             this.launchSimulator();
@@ -285,6 +296,39 @@ class DesignLabUI {
                 ring.classList.remove('hovering');
             }
         });
+    }
+
+    saveConfig() {
+        const config = this.calculator.config;
+        const env = this.getEnvironmentConfig();
+        const data = { config, environment: env, timestamp: new Date().toISOString() };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `uav-config-${Date.now()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    loadConfig(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if (data.config) {
+                    Object.assign(this.calculator.config, data.config);
+                    this.syncDropdownsFromConfig();
+                    this.updateUI();
+                }
+            } catch (err) {
+                console.error('Failed to load config:', err);
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
     }
 
     launchSimulator() {
