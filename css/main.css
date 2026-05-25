@@ -437,3 +437,34 @@ button:disabled {
         font-size: 1.2rem;
     }
 }
+
+/* ==========================================================================
+   TOUCH DEVICE SUPPORT
+   ========================================================================== */
+@media (pointer: coarse) {
+    html, body, a, button, select, input,
+    .category-header, .terrain-option, .stick-boundary, .stick {
+        cursor: auto !important;
+    }
+    .cursor-dot, .cursor-ring {
+        display: none !important;
+    }
+    .grain-overlay {
+        display: none !important;
+    }
+}
+
+/* ==========================================================================
+   MOBILE BODY SCROLL FIX
+   ========================================================================== */
+@media (max-width: 900px) {
+    body {
+        overflow-y: auto;
+        height: auto;
+    }
+    
+    .section {
+        height: auto;
+        min-height: 100vh;
+    }
+}

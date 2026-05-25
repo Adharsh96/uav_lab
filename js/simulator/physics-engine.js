@@ -274,11 +274,11 @@ class PhysicsEngine {
         // Pitch torque
         torques.z = pitch * this.armLength * this.maxThrustPerMotor * 2;
         
-        // Yaw torque (from motor drag)
-        torques.y = yaw * 0.01 * this.maxThrustPerMotor;
+        // Yaw torque (from motor drag — increased for realistic heading authority)
+        torques.y = yaw * 0.05 * this.maxThrustPerMotor;
         
-        // Aerodynamic damping
-        const damping = 0.1;
+        // Aerodynamic damping (higher value settles angular velocity faster)
+        const damping = 0.5;
         torques.sub(this.state.angularVelocity.clone().multiplyScalar(damping));
         
         return torques;

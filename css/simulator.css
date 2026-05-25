@@ -314,6 +314,9 @@
     position: relative;
     margin: 0 auto;
     cursor: none;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .stick-crosshair {
@@ -539,31 +542,74 @@
 }
 
 @media (max-width: 600px) {
-    .telemetry-panel {
-        position: static;
-        width: 100%;
-        margin-top: 140px;
-        height: auto;
-        z-index: 10;
-    }
-    
-    .rc-controller {
-        position: static;
-        width: 100%;
-        margin-top: 10px;
-        margin-bottom: 20px;
-        height: auto;
-        z-index: 10;
-    }
-    
     .simulator-container {
         height: auto;
+        min-height: 100vh;
         overflow-y: auto;
     }
     
     #simulator-canvas-container {
-        height: 400px;
+        height: 45vh;
+        min-height: 250px;
         position: relative;
+    }
+    
+    .top-bar {
+        position: relative;
+        height: auto;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 8px 12px;
+    }
+    
+    .sim-title {
+        font-size: 1rem;
+    }
+    
+    .exit-button {
+        width: 100%;
+        text-align: center;
+    }
+    
+    .telemetry-panel {
+        position: relative;
+        top: auto;
+        right: auto;
+        width: calc(100% - 16px);
+        max-height: none;
+        margin: 8px;
+    }
+    
+    .rc-controller {
+        position: relative;
+        bottom: auto;
+        right: auto;
+        width: calc(100% - 16px);
+        margin: 8px;
+    }
+    
+    .stick-boundary {
+        width: 130px;
+        height: 130px;
+    }
+    
+    .stick {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .keyboard-hint {
+        display: none;
+    }
+    
+    .rc-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .rc-btn {
+        min-width: calc(50% - 6px);
+        padding: 12px 8px;
+        font-size: 12px;
     }
 }
 

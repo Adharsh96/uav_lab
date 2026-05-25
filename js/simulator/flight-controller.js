@@ -14,7 +14,12 @@ class FlightController {
         // Keyboard state
         this.keys = {};
         
-        // Mouse/stick state
+        // Smooth keyboard interpolation state
+        this.keyboardPitch = 0;
+        this.keyboardRoll = 0;
+        this.keyboardYaw = 0;
+        
+        // Mouse/touch stick state
         this.leftStick = { x: 0, y: -1 }; // y = -1 for 0 throttle
         this.rightStick = { x: 0, y: 0 };
         this.draggingStick = null;
@@ -26,6 +31,7 @@ class FlightController {
         this.returnToHome = false;
         this.loiterMode = false;
         this.loiterPosition = new THREE.Vector3();
+        this.loiterHeading = 0; // Saved heading for heading-hold in loiter
         
         this.setupInputHandlers();
     }
@@ -36,8 +42,12 @@ class FlightController {
             const key = e.key.toLowerCase();
             this.keys[key] = true;
 
-            if (e.key === ' ') {
+            // Prevent default scrolling for game controls
+            if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key) || e.key === ' ') {
                 e.preventDefault();
+            }
+
+            if (e.key === ' ') {
                 this.emergencyStop();
             }
             if (key === 'r') {
@@ -53,7 +63,7 @@ class FlightController {
             this.keys[key] = false;
         });
 
-        // RC Sticks
+        // RC Sticks (mouse + touch)
         this.setupStickControls('left-stick', 'left-stick-boundary', (x, y) => {
             this.leftStick = { x, y };
         });
@@ -62,9 +72,19 @@ class FlightController {
             this.rightStick = { x, y };
         });
 
-        // Global mouse handlers for sticks
-        document.addEventListener('mousemove', (e) => this.handleStickDrag(e));
+        // Global mouse handlers for stick dragging
+        document.addEventListener('mousemove', (e) => this.handleStickDragFromCoords(e.clientX, e.clientY));
         document.addEventListener('mouseup', () => this.handleStickRelease());
+
+        // Global touch handlers for stick dragging
+        document.addEventListener('touchmove', (e) => {
+            if (!this.draggingStick) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            this.handleStickDragFromCoords(touch.clientX, touch.clientY);
+        }, { passive: false });
+        document.addEventListener('touchend', () => this.handleStickRelease());
+        document.addEventListener('touchcancel', () => this.handleStickRelease());
 
         // Buttons
         document.getElementById('arm-button').addEventListener('click', () => this.toggleArm());
@@ -88,13 +108,22 @@ class FlightController {
         
         this.stickElements[stickId] = { stick, boundary, callback };
 
+        // Mouse support
         boundary.addEventListener('mousedown', (e) => {
             this.draggingStick = stickId;
-            this.handleStickDrag(e);
+            this.handleStickDragFromCoords(e.clientX, e.clientY);
         });
+
+        // Touch support
+        boundary.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.draggingStick = stickId;
+            const touch = e.touches[0];
+            this.handleStickDragFromCoords(touch.clientX, touch.clientY);
+        }, { passive: false });
     }
 
-    handleStickDrag(e) {
+    handleStickDragFromCoords(clientX, clientY) {
         if (!this.draggingStick) return;
 
         const { stick, boundary, callback } = this.stickElements[this.draggingStick];
@@ -102,21 +131,22 @@ class FlightController {
         const radius = rect.width / 2;
         const centerX = rect.left + radius;
         const centerY = rect.top + radius;
+        const maxRange = radius - 20;
         
-        let x = e.clientX - centerX;
-        let y = e.clientY - centerY;
+        let x = clientX - centerX;
+        let y = clientY - centerY;
         
         const distance = Math.sqrt(x * x + y * y);
-        if (distance > radius - 20) {
+        if (distance > maxRange) {
             const angle = Math.atan2(y, x);
-            x = Math.cos(angle) * (radius - 20);
-            y = Math.sin(angle) * (radius - 20);
+            x = Math.cos(angle) * maxRange;
+            y = Math.sin(angle) * maxRange;
         }
         
         stick.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
         
-        const normalizedX = x / (radius - 20);
-        const normalizedY = -y / (radius - 20);
+        const normalizedX = x / maxRange;
+        const normalizedY = -y / maxRange;
         
         callback(normalizedX, normalizedY);
     }
@@ -126,13 +156,14 @@ class FlightController {
 
         const { stick, boundary, callback } = this.stickElements[this.draggingStick];
         const radius = boundary.getBoundingClientRect().width / 2;
+        const maxRange = radius - 20;
 
         if (this.draggingStick === 'right-stick') {
             stick.style.transform = 'translate(-50%, -50%)';
             callback(0, 0);
         } else if (this.draggingStick === 'left-stick') {
             const currentY = this.leftStick.y;
-            stick.style.transform = `translate(-50%, calc(-50% + ${-currentY * (radius - 20)}px))`;
+            stick.style.transform = `translate(-50%, calc(-50% + ${-currentY * maxRange}px))`;
             callback(0, currentY);
         }
         
@@ -140,32 +171,45 @@ class FlightController {
     }
 
     update(physicsState, dt) {
-        // Base controls from sticks
-        this.updateFromSticks();
-        // Override with keyboard if keys are pressed
-        this.updateFromKeyboard();
+        // Detect active manual input (sticks or keys)
+        const hasManualInput = this.hasActiveInput();
         
-        // Deactivate loiter or RTH if manual input is significant
-        const manualOverride = Math.abs(this.controls.pitch) > 0.05 || 
-                               Math.abs(this.controls.roll) > 0.05 || 
-                               Math.abs(this.controls.yaw) > 0.05 ||
-                               this.keys['w'] || this.keys['s'];
-                               
-        if (manualOverride && (this.loiterMode || this.returnToHome)) {
+        // Cancel autonomous modes on deliberate manual input
+        if (hasManualInput && (this.loiterMode || this.returnToHome)) {
             if (this.loiterMode) this.toggleLoiter();
             if (this.returnToHome) this.activateRTH();
         }
         
-        // Apply PID stabilization if needed
-        if (this.altitudeHold || this.positionHold || this.returnToHome || this.loiterMode) {
+        if (this.loiterMode || this.returnToHome) {
+            // Autonomous mode — stabilization controls the drone entirely
             this.applyStabilization(physicsState, dt);
+        } else {
+            // Manual control from sticks and keyboard
+            this.updateFromSticks();
+            this.updateFromKeyboard(dt);
+            
+            // Altitude hold supplements manual control
+            if (this.altitudeHold) {
+                this.applyStabilization(physicsState, dt);
+            }
         }
         
         return this.controls;
     }
 
+    hasActiveInput() {
+        // Returns true if the user is actively pushing directional keys or sticks
+        const keyActive = this.keys['arrowup'] || this.keys['arrowdown'] || 
+                         this.keys['arrowleft'] || this.keys['arrowright'] ||
+                         this.keys['a'] || this.keys['d'] ||
+                         this.keys['w'] || this.keys['s'];
+        const stickActive = this.draggingStick === 'right-stick' ||
+                           (this.draggingStick === 'left-stick' && Math.abs(this.leftStick.x) > 0.1);
+        return keyActive || stickActive;
+    }
+
     updateFromSticks() {
-        // This sets the base values from the current stick positions
+        // Set base values from current stick positions
         if (this.draggingStick === 'left-stick') {
             this.controls.throttle = (this.leftStick.y + 1) / 2;
         }
@@ -174,8 +218,11 @@ class FlightController {
         this.controls.roll = this.rightStick.x;
     }
 
-    updateFromKeyboard() {
-        // Throttle (W/S)
+    updateFromKeyboard(dt) {
+        const rampUp = 5.0;   // Rate at which inputs ramp toward target
+        const rampDown = 8.0; // Rate at which inputs decay back to center
+
+        // Throttle (W/S) — incremental, already smooth
         if (this.keys['w']) {
             this.controls.throttle = Math.min(1, this.controls.throttle + 0.02);
         }
@@ -183,26 +230,46 @@ class FlightController {
             this.controls.throttle = Math.max(0, this.controls.throttle - 0.02);
         }
         
-        // Yaw (A/D)
-        if (this.keys['a']) {
-            this.controls.yaw = -1;
-        } else if (this.keys['d']) {
-            this.controls.yaw = 1;
+        // --- Smooth Yaw (A/D) ---
+        let targetYaw = 0;
+        if (this.keys['a']) targetYaw = -0.7;
+        else if (this.keys['d']) targetYaw = 0.7;
+        
+        if (targetYaw !== 0) {
+            this.keyboardYaw += (targetYaw - this.keyboardYaw) * Math.min(1, rampUp * dt);
+        } else {
+            this.keyboardYaw *= Math.max(0, 1 - rampDown * dt);
+            if (Math.abs(this.keyboardYaw) < 0.01) this.keyboardYaw = 0;
         }
         
-        // Pitch (Up/Down Arrow)
-        if (this.keys['arrowup']) {
-            this.controls.pitch = 1;
-        } else if (this.keys['arrowdown']) {
-            this.controls.pitch = -1;
+        // --- Smooth Pitch (Up/Down Arrow) ---
+        let targetPitch = 0;
+        if (this.keys['arrowup']) targetPitch = 0.7;
+        else if (this.keys['arrowdown']) targetPitch = -0.7;
+        
+        if (targetPitch !== 0) {
+            this.keyboardPitch += (targetPitch - this.keyboardPitch) * Math.min(1, rampUp * dt);
+        } else {
+            this.keyboardPitch *= Math.max(0, 1 - rampDown * dt);
+            if (Math.abs(this.keyboardPitch) < 0.01) this.keyboardPitch = 0;
         }
         
-        // Roll (Left/Right Arrow)
-        if (this.keys['arrowleft']) {
-            this.controls.roll = -1;
-        } else if (this.keys['arrowright']) {
-            this.controls.roll = 1;
+        // --- Smooth Roll (Left/Right Arrow) ---
+        let targetRoll = 0;
+        if (this.keys['arrowleft']) targetRoll = -0.7;
+        else if (this.keys['arrowright']) targetRoll = 0.7;
+        
+        if (targetRoll !== 0) {
+            this.keyboardRoll += (targetRoll - this.keyboardRoll) * Math.min(1, rampUp * dt);
+        } else {
+            this.keyboardRoll *= Math.max(0, 1 - rampDown * dt);
+            if (Math.abs(this.keyboardRoll) < 0.01) this.keyboardRoll = 0;
         }
+        
+        // Override stick defaults with smoothed keyboard values
+        if (Math.abs(this.keyboardYaw) > 0.01) this.controls.yaw = this.keyboardYaw;
+        if (Math.abs(this.keyboardPitch) > 0.01) this.controls.pitch = this.keyboardPitch;
+        if (Math.abs(this.keyboardRoll) > 0.01) this.controls.roll = this.keyboardRoll;
         
         this.updateLeftStickVisual();
         this.updateRightStickVisual();
@@ -214,10 +281,10 @@ class FlightController {
         if (!stick || !boundary) return;
         
         const rect = boundary.getBoundingClientRect();
-        const radius = rect.width / 2;
+        const maxRange = rect.width / 2 - 20;
         
-        const y = -(this.controls.throttle * 2 - 1) * (radius - 20);
-        const x = this.controls.yaw * (radius - 20);
+        const y = -(this.controls.throttle * 2 - 1) * maxRange;
+        const x = this.controls.yaw * maxRange;
         
         stick.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
     }
@@ -228,10 +295,10 @@ class FlightController {
         if (!stick || !boundary) return;
         
         const rect = boundary.getBoundingClientRect();
-        const radius = rect.width / 2;
+        const maxRange = rect.width / 2 - 20;
         
-        const x = this.controls.roll * (radius - 20);
-        const y = -this.controls.pitch * (radius - 20);
+        const x = this.controls.roll * maxRange;
+        const y = -this.controls.pitch * maxRange;
         
         stick.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
     }
@@ -243,8 +310,8 @@ class FlightController {
         const currentPitch = euler.z;
         const currentYaw = euler.y;
         
-        // Altitude hold
-        if (this.altitudeHold) {
+        // Altitude hold (standalone, supplements manual control)
+        if (this.altitudeHold && !this.loiterMode && !this.returnToHome) {
             const desiredAltitude = 5; // 5 meters
             const throttleCorrection = this.pidController.updateAltitude(
                 desiredAltitude,
@@ -254,7 +321,7 @@ class FlightController {
             this.controls.throttle += throttleCorrection;
         }
         
-        // Loiter Mode: Locks horizontal position (X, Z) and vertical height (Y)
+        // Loiter Mode: Maintains GPS position, altitude, and heading
         if (this.loiterMode) {
             // 1. Altitude stabilization (maintain loiter Y position)
             const hoverThrottle = (window.uavSimulator && window.uavSimulator.physics) ? 
@@ -276,24 +343,28 @@ class FlightController {
                 dt
             );
 
-            // Translate corrections to local body coordinates based on current heading (Yaw)
+            // Translate corrections to local body coordinates based on current heading
             const heading = currentYaw;
             const cosYaw = Math.cos(heading);
             const sinYaw = Math.sin(heading);
             
-            // X error pushes roll, Z error pushes pitch (rotated for yaw)
             const localCorrectionX = posCorrection.x * cosYaw + posCorrection.y * sinYaw;
             const localCorrectionZ = -posCorrection.x * sinYaw + posCorrection.y * cosYaw;
 
-            // Constrain stabilization tilt levels to safe angles
-            this.controls.pitch = Math.max(-0.4, Math.min(0.4, localCorrectionX));
-            this.controls.roll = Math.max(-0.4, Math.min(0.4, localCorrectionZ));
-            this.controls.yaw = 0; // Maintain steady heading
+            // Constrain stabilization tilt to safe angles
+            this.controls.pitch = Math.max(-0.3, Math.min(0.3, localCorrectionX));
+            this.controls.roll = Math.max(-0.3, Math.min(0.3, localCorrectionZ));
+            
+            // 3. Heading hold — actively maintain saved yaw heading via P-controller
+            let yawError = this.loiterHeading - currentYaw;
+            // Normalize to [-PI, PI]
+            while (yawError < -Math.PI) yawError += Math.PI * 2;
+            while (yawError > Math.PI) yawError -= Math.PI * 2;
+            this.controls.yaw = Math.max(-0.5, Math.min(0.5, yawError * 2.0));
         }
         
         // Return to home
         if (this.returnToHome) {
-            // Simplified RTH
             const homePosition = new THREE.Vector3(0, 5, 0); // Fly at safe altitude 5m
             const currentPosition = physicsState.position.clone();
             
@@ -377,9 +448,24 @@ class FlightController {
             this.controls.roll = 0;
             this.controls.yaw = 0;
             
+            // Reset keyboard smooth state
+            this.keyboardPitch = 0;
+            this.keyboardRoll = 0;
+            this.keyboardYaw = 0;
+            
+            // Deactivate autonomous modes
+            this.loiterMode = false;
+            this.returnToHome = false;
+            
             const button = document.getElementById('arm-button');
             button.textContent = 'ARM';
             button.style.background = 'linear-gradient(135deg, #4CAF50 0%, #45a049 100%)';
+            
+            // Reset mode button UI
+            const loiterBtn = document.getElementById('loiter-button');
+            if (loiterBtn) loiterBtn.classList.remove('active');
+            const rthBtn = document.getElementById('rth-button');
+            if (rthBtn) rthBtn.classList.remove('active');
         }
     }
 
@@ -407,11 +493,20 @@ class FlightController {
         this.controls.yaw = 0;
         this.leftStick = { x: 0, y: -1 };
         this.rightStick = { x: 0, y: 0 };
+        this.keyboardPitch = 0;
+        this.keyboardRoll = 0;
+        this.keyboardYaw = 0;
         this.altitudeHold = false;
         this.positionHold = false;
         this.returnToHome = false;
         this.loiterMode = false;
         this.pidController.reset();
+        
+        // Reset mode button UI
+        const loiterBtn = document.getElementById('loiter-button');
+        if (loiterBtn) loiterBtn.classList.remove('active');
+        const rthBtn = document.getElementById('rth-button');
+        if (rthBtn) rthBtn.classList.remove('active');
     }
 
     toggleLoiter() {
@@ -422,7 +517,18 @@ class FlightController {
             const btn = document.getElementById('loiter-button');
             
             if (this.loiterMode) {
+                // Capture current position for hold
                 this.loiterPosition.copy(window.uavSimulator.physics.state.position);
+                
+                // Capture current heading for heading-hold
+                const euler = new THREE.Euler().setFromQuaternion(
+                    window.uavSimulator.physics.state.rotation
+                );
+                this.loiterHeading = euler.y;
+                
+                // Kill angular velocity to stop any existing rotation immediately
+                window.uavSimulator.physics.state.angularVelocity.set(0, 0, 0);
+                
                 this.returnToHome = false;
                 this.altitudeHold = false;
                 
